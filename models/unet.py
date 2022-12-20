@@ -6,7 +6,7 @@ from itertools import chain
 from base import BaseModel
 from utils.helpers import initialize_weights, set_trainable
 from itertools import chain
-from models import resnet
+# from models import resnet
 
 
 def x2conv(in_channels, out_channels, inner_channels=None):

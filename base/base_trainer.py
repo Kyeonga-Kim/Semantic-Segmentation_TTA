@@ -43,19 +43,19 @@ class BaseTrainer:
         self.save_period = cfg_trainer['save_period']
 
         # OPTIMIZER
-        if self.config['optimizer']['differential_lr']:
-            if isinstance(self.model, torch.nn.DataParallel):
-                trainable_params = [{'params': filter(lambda p:p.requires_grad, self.model.module.get_decoder_params())},
-                                    {'params': filter(lambda p:p.requires_grad, self.model.module.get_backbone_params()), 
-                                    'lr': config['optimizer']['args']['lr'] / 10}]
-            else:
-                trainable_params = [{'params': filter(lambda p:p.requires_grad, self.model.get_decoder_params())},
-                                    {'params': filter(lambda p:p.requires_grad, self.model.get_backbone_params()), 
-                                    'lr': config['optimizer']['args']['lr'] / 10}]
-        else:
-            trainable_params = filter(lambda p:p.requires_grad, self.model.parameters())
-        self.optimizer = get_instance(torch.optim, 'optimizer', config, trainable_params)
-        self.lr_scheduler = getattr(utils.lr_scheduler, config['lr_scheduler']['type'])(self.optimizer, self.epochs, len(train_loader))
+        # if self.config['optimizer']['differential_lr']:
+        #     if isinstance(self.model, torch.nn.DataParallel):
+        #         trainable_params = [{'params': filter(lambda p:p.requires_grad, self.model.module.get_decoder_params())},
+        #                             {'params': filter(lambda p:p.requires_grad, self.model.module.get_backbone_params()), 
+        #                             'lr': config['optimizer']['args']['lr'] / 10}]
+        #     else:
+        #         trainable_params = [{'params': filter(lambda p:p.requires_grad, self.model.get_decoder_params())},
+        #                             {'params': filter(lambda p:p.requires_grad, self.model.get_backbone_params()), 
+        #                             'lr': config['optimizer']['args']['lr'] / 10}]
+        # else:
+        #     trainable_params = filter(lambda p:p.requires_grad, self.model.parameters())
+        # self.optimizer = get_instance(torch.optim, 'optimizer', config, trainable_params)
+        # self.lr_scheduler = getattr(utils.lr_scheduler, config['lr_scheduler']['type'])(self.optimizer, self.epochs, len(train_loader))
 
         # MONITORING
         self.monitor = cfg_trainer.get('monitor', 'off')
@@ -76,8 +76,9 @@ class BaseTrainer:
         with open(config_save_path, 'w') as handle:
             json.dump(self.config, handle, indent=4, sort_keys=True)
 
-        writer_dir = os.path.join(cfg_trainer['log_dir'], self.config['name'], start_time)
-        self.writer = tensorboard.SummaryWriter(writer_dir)
+        #writer_dir = os.path.join(cfg_trainer['log_dir'], self.config['name'], start_time)
+        # writer_dir = os.path.join('saved', start_time)
+        # self.writer = tensorboard.SummaryWriter(writer_dir)
 
         if resume: self._resume_checkpoint(resume)
 
@@ -98,42 +99,42 @@ class BaseTrainer:
     def train(self):
         for epoch in range(self.start_epoch, self.epochs+1):
             # RUN TRAIN (AND VAL)
-            results = self._train_epoch(epoch)
+            #results = self._train_epoch(epoch)
             if self.do_validation and epoch % self.config['trainer']['val_per_epochs'] == 0:
                 results = self._valid_epoch(epoch)
 
                 # LOGGING INFO
-                self.logger.info(f'\n         ## Info for epoch {epoch} ## ')
-                for k, v in results.items():
-                    self.logger.info(f'         {str(k):15s}: {v}')
+            #     self.logger.info(f'\n         ## Info for epoch {epoch} ## ')
+            #     for k, v in results.items():
+            #         self.logger.info(f'         {str(k):15s}: {v}')
             
-            if self.train_logger is not None:
-                log = {'epoch' : epoch, **results}
-                self.train_logger.add_entry(log)
+            # if self.train_logger is not None:
+            #     log = {'epoch' : epoch, **results}
+            #     self.train_logger.add_entry(log)
 
             # CHECKING IF THIS IS THE BEST MODEL (ONLY FOR VAL)
-            if self.mnt_mode != 'off' and epoch % self.config['trainer']['val_per_epochs'] == 0:
-                try:
-                    if self.mnt_mode == 'min': self.improved = (log[self.mnt_metric] < self.mnt_best)
-                    else: self.improved = (log[self.mnt_metric] > self.mnt_best)
-                except KeyError:
-                    self.logger.warning(f'The metrics being tracked ({self.mnt_metric}) has not been calculated. Training stops.')
-                    break
+            # if self.mnt_mode != 'off' and epoch % self.config['trainer']['val_per_epochs'] == 0:
+            #     try:
+            #         if self.mnt_mode == 'min': self.improved = (log[self.mnt_metric] < self.mnt_best)
+            #         else: self.improved = (log[self.mnt_metric] > self.mnt_best)
+            #     except KeyError:
+            #         self.logger.warning(f'The metrics being tracked ({self.mnt_metric}) has not been calculated. Training stops.')
+            #         break
                     
-                if self.improved:
-                    self.mnt_best = log[self.mnt_metric]
-                    self.not_improved_count = 0
-                else:
-                    self.not_improved_count += 1
+            #     if self.improved:
+            #         self.mnt_best = log[self.mnt_metric]
+            #         self.not_improved_count = 0
+            #     else:
+            #         self.not_improved_count += 1
 
-                if self.not_improved_count > self.early_stoping:
-                    self.logger.info(f'\nPerformance didn\'t improve for {self.early_stoping} epochs')
-                    self.logger.warning('Training Stoped')
-                    break
+            #     if self.not_improved_count > self.early_stoping:
+            #         self.logger.info(f'\nPerformance didn\'t improve for {self.early_stoping} epochs')
+            #         self.logger.warning('Training Stoped')
+            #         break
 
-            # SAVE CHECKPOINT
-            if epoch % self.save_period == 0:
-                self._save_checkpoint(epoch, save_best=self.improved)
+            # # SAVE CHECKPOINT
+            # if epoch % self.save_period == 0:
+            #     self._save_checkpoint(epoch, save_best=self.improved)
 
     def _save_checkpoint(self, epoch, save_best=False):
         state = {

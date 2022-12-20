@@ -23,8 +23,9 @@ def main(config, resume):
     val_loader = get_instance(dataloaders, 'val_loader', config)
 
     # MODEL
-    model = get_instance(models, 'arch', config, train_loader.dataset.num_classes)
-    print(f'\n{model}\n')
+    #model = get_instance(models, 'arch', config, train_loader.dataset.num_classes)
+    model = torch.hub.load('pytorch/vision:v0.10.0', 'deeplabv3_resnet50', pretrained=True)
+    #print(f'\n{model}\n')
 
     # LOSS
     loss = getattr(losses, config['loss'])(ignore_index = config['ignore_index'])
