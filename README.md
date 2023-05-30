@@ -1,5 +1,5 @@
 # Segmentation_TTA
-This repo for studying Segmentation with Test-Time Augmentation(TTA)
+This repo for studying Semantic Segmentation with Test-Time Augmentation(TTA)
 
 Experiment with data augmentation from different angles
 More Detail, Please refer to my report..
